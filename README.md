@@ -2,7 +2,7 @@
 
 Velocity is a fictional sports e-commerce website built as the data source for an end-to-end user activity tracking pipeline. The app generates events such as product page visits, add-to-cart actions, cart removals, and completed purchases. Those events are written as local JSON files and then processed through Apache NiFi, MinIO, ClickHouse, ODBC, and Power BI.
 
-## Project Overview
+## Project Overview 🚀
 
 This repository combines two parts:
 
@@ -28,7 +28,7 @@ Each event is stored as JSON and includes metadata such as user information, pro
 
 Velocity acts as the source system. User interactions are captured in the application and stored locally as JSON files. This creates a reproducible event stream without requiring a live production backend.
 
-### 2. Apache NiFi ingestion and transformation
+### 2. Apache NiFi ingestion and transformation 🔄
 
 Apache NiFi orchestrates the data flow with four processors:
 
@@ -38,6 +38,8 @@ Apache NiFi orchestrates the data flow with four processors:
 - `PutS3Object` writes the transformed files to object storage.
 
 This step reflects a common real-world pattern: ingest raw events, standardize the schema, and land them in durable object storage before loading them into the warehouse.
+
+![Apache NiFi workflow](ressources/nifi.jpeg)
 
 ### 3. MinIO object storage
 
@@ -58,7 +60,7 @@ These structures make the data easy to query for behavioral analysis, conversion
 
 An ODBC data source on Windows connects Power BI directly to ClickHouse. The configured source, named `User Tracking`, points to `localhost:8123` and the `default` database.
 
-### 6. Power BI dashboard
+### 6. Power BI dashboard 📊
 
 The final layer is a Power BI dashboard titled `Tracking Users Activity`. It visualizes user behavior through six main charts:
 
@@ -68,6 +70,8 @@ The final layer is a Power BI dashboard titled `Tracking Users Activity`. It vis
 - product page visits over time
 - average time in cart by user
 - average time in cart by order
+
+![Power BI dashboard](ressources/powerBI.png)
 
 ## Why This Pipeline Matches Best Practice
 
