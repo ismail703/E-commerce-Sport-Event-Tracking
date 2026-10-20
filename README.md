@@ -60,13 +60,13 @@ Each event is stored as JSON and includes metadata such as user information, pro
 
 ## 🔄 Data Pipeline
 
-```mermaid
+````mermaid
 flowchart LR
     A["🛍️ Velocity<br/>Next.js app"] -->|JSON events| B["🔄 Apache NiFi"]
     B -->|yyyy/MM/dd/HH.json| C["🪣 MinIO<br/>S3 storage"]
     C --> D["⚡ ClickHouse<br/>raw table + MVs"]
     D -->|ODBC| E["📊 Power BI"]
-```
+````
 
 ### 1️⃣ Event generation in Velocity
 
@@ -97,9 +97,9 @@ This reflects a common real-world pattern: ingest raw events, standardize the sc
 
 MinIO is used as an S3-compatible landing zone for the transformed JSON files. Files are partitioned by date and hour:
 
-```text
+````text
 yyyy/MM/dd/HH.json
-```
+````
 
 This supports incremental processing, replay and time-based backfills.
 
@@ -179,6 +179,7 @@ The final layer is a Power BI dashboard titled **`Tracking Users Activity`**, wi
 
 ## 📁 Repository Structure
 
+````text
 ├── app/                    # Next.js App Router pages, layouts and API routes
 │   └── api/                # Tracking, checkout, authentication and admin endpoints
 ├── components/             # Shared UI components and the shadcn/ui component set
@@ -196,7 +197,7 @@ The final layer is a Power BI dashboard titled **`Tracking Users Activity`**, wi
 ├── tsconfig.json           # TypeScript compiler configuration
 ├── components.json         # UI component generator configuration
 └── postcss.config.mjs      # PostCSS and Tailwind CSS configuration
-```
+````
 
 The application container and the data-platform services share the `etl-net`
 Docker network. The `shared-logs`, `minio-data` and `clickhouse-data` named
@@ -213,16 +214,16 @@ The recommended way to run the project is with Docker Compose. Install
 sure Docker is running, then execute the following commands from the project
 root:
 
-```bash
+````bash
 docker compose up --build
-```
+````
 
 The `--build` flag builds the Next.js image from the `Dockerfile` before
 starting the services. To run the stack in the background instead:
 
-```bash
+````bash
 docker compose up --build -d
-```
+````
 
 Once the containers are ready, the main services are available at:
 
@@ -246,23 +247,21 @@ certificate warning on the first visit.
 
 Useful Compose commands:
 
-### Run the development server
-
-```bash
+````bash
 docker compose logs -f                 # Follow logs for all services
 docker compose logs -f ecommerce-app   # Follow only the Next.js app logs
 docker compose down                    # Stop and remove containers
-```
+````
 
 ### Run the Next.js app locally
 
 For front-end development without rebuilding the container, install
 [Node.js](https://nodejs.org/) 18 or later and pnpm, then run:
 
-```bash
+````bash
 pnpm install
 pnpm dev
-```
+````
 
 Open **[http://localhost:3000](http://localhost:3000)** when the development
 server is ready. The Docker Compose services can still be started separately
@@ -282,3 +281,9 @@ when testing the complete event pipeline.
 ⭐ *If you found this project useful, consider giving it a star!*
 
 </div>
+````
+````
+
+Two optional notes:
+- The folder is spelled `ressources`. I kept it because the image paths depend on it, but renaming it to `resources` (and updating the paths) would be cleaner.
+- The README lists the default passwords. That's fine for a demo, but it's worth adding a line saying they should be changed outside local use.
