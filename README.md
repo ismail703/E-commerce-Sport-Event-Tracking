@@ -179,49 +179,94 @@ The final layer is a Power BI dashboard titled **`Tracking Users Activity`**, wi
 
 ## 📁 Repository Structure
 
-```text
-.
-├── app/            # Next.js app routes and pages
-├── components/     # Shared UI and dashboard components
-├── hooks/          # React hooks used across the app
-├── lib/            # Stores, types, data helpers and utilities
-├── public/images/  # Static assets
-└── styles/         # Global styling
+├── app/                    # Next.js App Router pages, layouts and API routes
+│   └── api/                # Tracking, checkout, authentication and admin endpoints
+├── components/             # Shared UI components and the shadcn/ui component set
+├── hooks/                  # Reusable React hooks, including tracking hooks
+├── lib/                    # Client stores, types, product data and utilities
+├── public/                 # Favicons, static assets and product images
+├── ressources/             # NiFi workflow and Power BI dashboard documentation
+├── logs/                   # Local event output shared with the NiFi container
+├── styles/                 # Additional global styles
+├── Dockerfile              # Builds the production Next.js application image
+├── docker-compose.yml      # Runs the app, NiFi, MinIO and ClickHouse services
+├── package.json            # Scripts and npm dependencies
+├── pnpm-lock.yaml          # Locked pnpm dependency versions
+├── next.config.mjs         # Next.js configuration
+├── tsconfig.json           # TypeScript compiler configuration
+├── components.json         # UI component generator configuration
+└── postcss.config.mjs      # PostCSS and Tailwind CSS configuration
 ```
+
+The application container and the data-platform services share the `etl-net`
+Docker network. The `shared-logs`, `minio-data` and `clickhouse-data` named
+volumes preserve event files and service data between container restarts.
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Start the full stack with Docker Compose
 
-- Node.js 18+ recommended
-- pnpm, npm or yarn
-
-### Install dependencies
+The recommended way to run the project is with Docker Compose. Install
+[Docker Desktop](https://www.docker.com/products/docker-desktop/) and make
+sure Docker is running, then execute the following commands from the project
+root:
 
 ```bash
-pnpm install
-# or
-npm install
+docker compose up --build
 ```
+
+The `--build` flag builds the Next.js image from the `Dockerfile` before
+starting the services. To run the stack in the background instead:
+
+```bash
+docker compose up --build -d
+```
+
+Once the containers are ready, the main services are available at:
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Velocity app | [http://localhost:3000](http://localhost:3000) | E-commerce application and event source |
+| Apache NiFi | [https://localhost:8443](https://localhost:8443) | Event ingestion and transformation |
+| MinIO console | [http://localhost:9001](http://localhost:9001) | Object-storage administration |
+| ClickHouse HTTP | [http://localhost:8123](http://localhost:8123) | Analytics database endpoint |
+
+The default credentials configured in `docker-compose.yml` are:
+
+| Service | Username | Password |
+|---------|----------|----------|
+| Apache NiFi | `admin` | `Password123!` |
+| MinIO | `minioadmin` | `Password123!` |
+| ClickHouse | `admin` | `Password123!` |
+
+NiFi uses a self-signed HTTPS certificate by default, so the browser may show a
+certificate warning on the first visit.
+
+Useful Compose commands:
 
 ### Run the development server
 
 ```bash
-pnpm dev
-# or
-npm run dev
+docker compose logs -f                 # Follow logs for all services
+docker compose logs -f ecommerce-app   # Follow only the Next.js app logs
+docker compose down                    # Stop and remove containers
 ```
 
-Then open **[http://localhost:3000](http://localhost:3000)**.
+### Run the Next.js app locally
 
-### Build and start for production
+For front-end development without rebuilding the container, install
+[Node.js](https://nodejs.org/) 18 or later and pnpm, then run:
 
 ```bash
-pnpm build
-pnpm start
+pnpm install
+pnpm dev
 ```
+
+Open **[http://localhost:3000](http://localhost:3000)** when the development
+server is ready. The Docker Compose services can still be started separately
+when testing the complete event pipeline.
 
 ---
 
