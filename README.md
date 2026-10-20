@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ Velocity — E-commerce Sport Tracking
+# ⚡ Velocity: E-commerce Sport Tracking
 
 ### End-to-end user activity tracking pipeline
 **Next.js → Apache NiFi → MinIO → ClickHouse → ODBC → Power BI**
@@ -230,7 +230,7 @@ pnpm start
 <div align="center">
 
 [![GitHub](https://img.shields.io/badge/GitHub-ismail703-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ismail703)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-ismail--el--main-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ismail-el-main/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-ismail--elmain-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ismail-elmain/)
 
 <br/>
 
