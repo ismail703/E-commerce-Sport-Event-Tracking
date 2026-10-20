@@ -1,128 +1,208 @@
-# e-commerce-sport-tracking
+<div align="center">
 
-Velocity is a fictional sports e-commerce website built as the data source for an end-to-end user activity tracking pipeline. The app generates events such as product page visits, add-to-cart actions, cart removals, and completed purchases. Those events are written as local JSON files and then processed through Apache NiFi, MinIO, ClickHouse, ODBC, and Power BI.
+# ⚡ Velocity — E-commerce Sport Tracking
 
-## Project Overview 🚀
+### End-to-end user activity tracking pipeline
+**Next.js → Apache NiFi → MinIO → ClickHouse → ODBC → Power BI**
+
+<br/>
+
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+
+![Apache NiFi](https://img.shields.io/badge/Apache_NiFi-728E9B?style=for-the-badge&logo=apachenifi&logoColor=white)
+![MinIO](https://img.shields.io/badge/MinIO-C72E49?style=for-the-badge&logo=minio&logoColor=white)
+![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=black)
+![Power BI](https://img.shields.io/badge/Power_BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
+
+<br/>
+
+[📖 Overview](#-project-overview) •
+[📡 Events](#-tracked-events) •
+[🔄 Pipeline](#-data-pipeline) •
+[📊 Dashboard](#-power-bi-dashboard) •
+[🛠️ Stack](#%EF%B8%8F-tech-stack) •
+[🚀 Getting Started](#-getting-started)
+
+</div>
+
+---
+
+## 🚀 Project Overview
+
+**Velocity** is a fictional sports e-commerce website built as the data source for an end-to-end **user activity tracking pipeline**. The app generates events such as product page visits, add-to-cart actions, cart removals and completed purchases. Those events are written as local JSON files, then processed through **Apache NiFi, MinIO, ClickHouse, ODBC and Power BI**.
 
 This repository combines two parts:
 
-- A Next.js front-end that simulates a sports e-commerce store called Velocity.
-- A data engineering pipeline that turns raw user events into analytics-ready tables and a Power BI dashboard.
+| Part | Description |
+|------|-------------|
+| 🛍️ **Front-end** | A Next.js app simulating the *Velocity* sports store |
+| 🧱 **Data pipeline** | Turns raw user events into analytics-ready tables and a Power BI dashboard |
 
-The goal is to demonstrate a realistic event tracking workflow that mirrors how modern product analytics pipelines are built in production.
+> 🎯 **Goal:** demonstrate a realistic event tracking workflow that mirrors how modern product analytics pipelines are built in production.
 
-## Tracked Events
+---
 
-The application records the following user behaviors:
+## 📡 Tracked Events
 
-- `product_page`: a user opens a product page and views product details.
-- `add_to_cart`: a product is added to the cart.
-- `remove_from_cart`: a product is removed from the cart.
-- `purchase_complete`: a checkout is completed successfully.
+| Event | Description |
+|-------|-------------|
+| 👀 `product_page` | A user opens a product page and views product details |
+| 🛒 `add_to_cart` | A product is added to the cart |
+| ❌ `remove_from_cart` | A product is removed from the cart |
+| ✅ `purchase_complete` | A checkout is completed successfully |
 
-Each event is stored as JSON and includes metadata such as user information, product identifiers, cart totals, quantity, color, size, page details, and timestamps.
+Each event is stored as JSON and includes metadata such as user information, product identifiers, cart totals, quantity, color, size, page details and timestamps.
 
-## Data Pipeline
+---
 
-### 1. Event generation in Velocity
+## 🔄 Data Pipeline
 
-Velocity acts as the source system. User interactions are captured in the application and stored locally as JSON files. This creates a reproducible event stream without requiring a live production backend.
+```mermaid
+flowchart LR
+    A["🛍️ Velocity<br/>Next.js app"] -->|JSON events| B["🔄 Apache NiFi"]
+    B -->|yyyy/MM/dd/HH.json| C["🪣 MinIO<br/>S3 storage"]
+    C --> D["⚡ ClickHouse<br/>raw table + MVs"]
+    D -->|ODBC| E["📊 Power BI"]
+```
 
-### 2. Apache NiFi ingestion and transformation 🔄
+### 1️⃣ Event generation in Velocity
 
-Apache NiFi orchestrates the data flow with four processors:
+Velocity acts as the source system. User interactions are captured in the application and stored locally as JSON files, creating a reproducible event stream without requiring a live production backend.
 
-- `GetFile` reads the JSON files from the local source folder.
-- `UpdateRecord` flattens nested fields, especially values under `/metadata/`, so the output is easier to query downstream.
-- `QueryRecord` cleans and reshapes the records, including timestamp normalization with `REPLACE`, and routes the result to the transformed stream.
-- `PutS3Object` writes the transformed files to object storage.
+### 2️⃣ Apache NiFi ingestion and transformation
 
-This step reflects a common real-world pattern: ingest raw events, standardize the schema, and land them in durable object storage before loading them into the warehouse.
+NiFi orchestrates the data flow with four processors:
+
+| Processor | Role |
+|-----------|------|
+| `GetFile` | Reads the JSON files from the local source folder |
+| `UpdateRecord` | Flattens nested fields, especially values under `/metadata/` |
+| `QueryRecord` | Cleans and reshapes records, including timestamp normalization with `REPLACE` |
+| `PutS3Object` | Writes the transformed files to object storage |
+
+This reflects a common real-world pattern: ingest raw events, standardize the schema, and land them in durable object storage before loading them into the warehouse.
+
+<div align="center">
 
 ![Apache NiFi workflow](ressources/nifi.jpeg)
 
-### 3. MinIO object storage
+*Apache NiFi workflow*
 
-MinIO is used as an S3-compatible landing zone for the transformed JSON files. Files are partitioned by date and hour using a path like `yyyy/MM/dd/HH.json`, which supports incremental processing, replay, and time-based backfills.
+</div>
 
-### 4. ClickHouse analytics layer
+### 3️⃣ MinIO object storage
 
-ClickHouse consumes the MinIO data through a raw stream table and materialized views. The repository includes event-oriented tables and views for:
+MinIO is used as an S3-compatible landing zone for the transformed JSON files. Files are partitioned by date and hour:
+
+```text
+yyyy/MM/dd/HH.json
+```
+
+This supports incremental processing, replay and time-based backfills.
+
+### 4️⃣ ClickHouse analytics layer
+
+ClickHouse consumes the MinIO data through a **raw stream table** and **materialized views**. The repository includes event-oriented tables and views for:
 
 - `add_to_cart`
 - `product_page`
 - `purchase_complete`
 - `remove_from_cart`
 
-These structures make the data easy to query for behavioral analysis, conversion tracking, and funnel exploration.
+These structures make the data easy to query for behavioral analysis, conversion tracking and funnel exploration.
 
-### 5. ODBC connectivity
+### 5️⃣ ODBC connectivity
 
-An ODBC data source on Windows connects Power BI directly to ClickHouse. The configured source, named `User Tracking`, points to `localhost:8123` and the `default` database.
+An ODBC data source on Windows connects Power BI directly to ClickHouse.
 
-### 6. Power BI dashboard 📊
+| Setting | Value |
+|---------|-------|
+| **Data source name** | `User Tracking` |
+| **Host** | `localhost:8123` |
+| **Database** | `default` |
 
-The final layer is a Power BI dashboard titled `Tracking Users Activity`. It visualizes user behavior through six main charts:
+---
 
-- products added by user
-- products removed by user
-- revenue by day
-- product page visits over time
-- average time in cart by user
-- average time in cart by order
+## 📊 Power BI Dashboard
+
+The final layer is a Power BI dashboard titled **`Tracking Users Activity`**, with six main charts:
+
+| # | Chart |
+|---|-------|
+| 1 | 🛒 Products added by user |
+| 2 | ❌ Products removed by user |
+| 3 | 💰 Revenue by day |
+| 4 | 📈 Product page visits over time |
+| 5 | ⏱️ Average time in cart by user |
+| 6 | 🧾 Average time in cart by order |
+
+<div align="center">
 
 ![Power BI dashboard](ressources/powerBI.png)
 
-## Why This Pipeline Matches Best Practice
+*Tracking Users Activity dashboard*
 
-This project follows patterns used in real analytics architectures:
+</div>
 
-- Separation of concerns: the app generates events, NiFi transforms them, MinIO stores them, ClickHouse serves analytics, and Power BI handles reporting.
-- Schema normalization: nested JSON is flattened before warehouse ingestion, which reduces downstream query complexity.
-- Durable landing zone: object storage keeps a replayable copy of the data, which is useful for reprocessing and recovery.
-- Time partitioning: day and hour partitions support incremental reads and easier backfills.
-- Analytics-optimized serving layer: ClickHouse is well suited for high-speed aggregations and dashboard workloads.
-- BI decoupling: Power BI reads from ClickHouse instead of the raw source, which keeps the reporting layer stable and performant.
+---
 
-In short, the pipeline mirrors a production-style ELT/analytics flow: event capture, file landing, transformation, warehouse modeling, and business intelligence.
+## ✨ Why This Pipeline Matches Best Practice
 
-## Tech Stack
+| Principle | How it applies |
+|-----------|----------------|
+| 🧩 **Separation of concerns** | The app generates events, NiFi transforms them, MinIO stores them, ClickHouse serves analytics, Power BI handles reporting |
+| 🧹 **Schema normalization** | Nested JSON is flattened before warehouse ingestion, reducing downstream query complexity |
+| 💾 **Durable landing zone** | Object storage keeps a replayable copy of the data for reprocessing and recovery |
+| 🕒 **Time partitioning** | Day and hour partitions support incremental reads and easier backfills |
+| ⚡ **Analytics-optimized serving** | ClickHouse is well suited for high-speed aggregations and dashboard workloads |
+| 🔌 **BI decoupling** | Power BI reads from ClickHouse instead of the raw source, keeping reporting stable and performant |
 
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS
-- Apache NiFi
-- MinIO
-- ClickHouse
-- ODBC on Windows
-- Power BI
+> In short, the pipeline mirrors a production-style **ELT / analytics flow**: event capture → file landing → transformation → warehouse modeling → business intelligence.
 
-## Repository Structure
+---
 
-- `app/`: Next.js app routes and pages.
-- `components/`: shared UI and dashboard components.
-- `hooks/`: React hooks used across the app.
-- `lib/`: stores, types, data helpers, and utilities.
-- `public/images/`: static assets.
-- `styles/`: global styling.
+## 🛠️ Tech Stack
 
-## Getting Started
+| Layer | Technologies |
+|-------|--------------|
+| **Front-end** | Next.js 16 · React 19 · TypeScript · Tailwind CSS |
+| **Ingestion** | Apache NiFi |
+| **Storage** | MinIO |
+| **Analytics** | ClickHouse |
+| **Connectivity** | ODBC (Windows) |
+| **BI** | Power BI |
+
+---
+
+## 📁 Repository Structure
+
+```text
+.
+├── app/            # Next.js app routes and pages
+├── components/     # Shared UI and dashboard components
+├── hooks/          # React hooks used across the app
+├── lib/            # Stores, types, data helpers and utilities
+├── public/images/  # Static assets
+└── styles/         # Global styling
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ recommended
-- pnpm, npm, or yarn
+- pnpm, npm or yarn
 
 ### Install dependencies
 
 ```bash
 pnpm install
-```
-
-If you prefer npm:
-
-```bash
+# or
 npm install
 ```
 
@@ -130,30 +210,30 @@ npm install
 
 ```bash
 pnpm dev
-```
-
-Or:
-
-```bash
+# or
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+Then open **[http://localhost:3000](http://localhost:3000)**.
 
-### Build for production
+### Build and start for production
 
 ```bash
 pnpm build
-```
-
-### Start the production server
-
-```bash
 pnpm start
 ```
 
-## Contact
+---
 
-GitHub: https://github.com/ismail703
+## 📬 Contact
 
-LinkedIn: https://www.linkedin.com/in/ismail-el-main/
+<div align="center">
+
+[![GitHub](https://img.shields.io/badge/GitHub-ismail703-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ismail703)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-ismail--el--main-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ismail-el-main/)
+
+<br/>
+
+⭐ *If you found this project useful, consider giving it a star!*
+
+</div>
